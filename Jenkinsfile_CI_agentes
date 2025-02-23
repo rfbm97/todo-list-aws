@@ -110,7 +110,7 @@ pipeline {
                     
                     sh '''
                         git add .
-                        git commit -m "Guardando cambios locales antes de cambiar a master" || true
+                        git commit -m "Guardando cambios locales antes de cambiar a master"
 
                         git checkout master
                         git merge develop
