@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    environment {
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+        
+    }
+    stages {
+        stage('Get Code') {
+            steps {
+                git branch: 'master', url: 'https://github.com/rfbm97/todo-list-aws.git'
+                //Creamos carpeta temporal para coger los archivos del segundo repositorio, ya que nos borra lo del otro repositorio al utilizar la orden directamente.
+                dir('Configuration'){
+                    git branch: 'production', url: 'https://github.com/rfbm97/todo-list-aws-config.git'
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                sh '''
+                    sam build
+                    sam deploy --config-env production --config-file ${WORKSPACE}/Configuration/samconfig.toml --resolve-s3
+                '''
+               
+            }
+        }
+        stage('Rest Test'){
+            steps{
+                //Cogemos la base de la URL con un script:
+                script {
+                    def BASE_URL = sh( script: "aws cloudformation describe-stacks --stack-name todo-list-aws-production --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text",
+                        returnStdout: true).trim()
+                    echo "$BASE_URL"
+                    
+                     // Asignar BASE_URL como variable global para el pipeline
+                    env.BASE_URL = BASE_URL
+                    
+                        sh '''
+                            export BASE_URL=$BASE_URL
+                            echo "BASE_URL en pytest: \$BASE_URL"
+                            python -m pytest -m cd ${WORKSPACE}/test/integration/todoApiTest.py 
+                            
+                        '''
+                }
+            }
+        }
+    }
+}
