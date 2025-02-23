@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
-                git branch: 'develop', url: 'https://github.com/rfbm97/to-do-list-aws.git'
+                git branch: 'develop', url: 'https://github.com/rfbm97/todo-list-aws.git'
             }
         }
         stage('Static') {
@@ -59,7 +59,7 @@ pipeline {
                     git merge develop
                     git add .
                     git commit -m "Merge con la rama develop"
-                    git push https://${GITHUB_TOKEN}@github.com/rfbm97/to-do-list-aws.git
+                    git push https://${GITHUB_TOKEN}@github.com/rfbm97/todo-list-aws.git
 
                 '''
             }
