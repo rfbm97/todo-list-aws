@@ -3,8 +3,9 @@ pipeline {
     environment {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
     }
-
-    stage('Clean Workspace'){
+    
+    stages {
+        stage('Clean Workspace'){
             agent {label 'default'}
             steps {
                 echo 'Usuario en el que se ejecuta la sesion'
@@ -15,8 +16,6 @@ pipeline {
             }
         }
 
-
-    stages {
         stage('Get Code') {
             agent {label 'default'}
             steps {
