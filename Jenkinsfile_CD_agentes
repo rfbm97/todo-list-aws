@@ -29,7 +29,7 @@ pipeline {
                 //Pasamos la variable BASE_URL a un archivo de texto
                 writeFile file: 'BASE_URL.txt', text: BASE_URL
                 stash includes: 'BASE_URL.txt', name: 'baseUrlStash'
-               
+                }  
             }
         }
         stage('Rest Test'){
