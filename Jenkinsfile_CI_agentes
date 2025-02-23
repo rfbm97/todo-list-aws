@@ -115,7 +115,7 @@ pipeline {
                         git checkout master
                         git merge develop
                         git add .
-                        git commit -m "Merge con la rama develop" || true
+                        git commit -m "Merge con la rama develop"
                         git push https://${GITHUB_TOKEN}@github.com/rfbm97/todo-list-aws.git
                     '''
                 }
