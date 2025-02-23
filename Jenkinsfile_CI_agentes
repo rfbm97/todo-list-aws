@@ -22,7 +22,7 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
 
-                git branch: 'develop', url: 'https://github.com/rfbm97/to-do-list-aws.git'
+                git branch: 'develop', url: 'https://github.com/rfbm97/todo-list-aws.git'
                 stash includes: '**/*', name: 'Files'
             }
         }
@@ -116,7 +116,7 @@ pipeline {
                         git merge develop
                         git add .
                         git commit -m "Merge con la rama develop" || true
-                        git push https://${GITHUB_TOKEN}@github.com/rfbm97/to-do-list-aws.git
+                        git push https://${GITHUB_TOKEN}@github.com/rfbm97/todo-list-aws.git
                     '''
                 }
             }
