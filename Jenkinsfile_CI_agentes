@@ -35,7 +35,7 @@ pipeline {
                         echo 'Usuario en el que se ejecuta la sesion'
                         sh 'whoami'
 
-                        //Cojo los archivos del area de almacenamiento temporal generada con stash
+                        // Cojo los archivos del área de almacenamiento temporal generada con stash
                         unstash 'Files'
 
                         sh '''
@@ -55,7 +55,7 @@ pipeline {
                         echo 'Usuario en el que se ejecuta la sesion'
                         sh 'whoami'
 
-                        //Cojo los archivos del area de almacenamiento temporal generada con stash
+                        // Cojo los archivos del área de almacenamiento temporal generada con stash
                         unstash 'Files'
 
                         sh '''
@@ -78,9 +78,9 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
 
-                //Cojo los archivos del area de almacenamiento temporal generada con stash
+                // Cojo los archivos del área de almacenamiento temporal generada con stash
                 unstash 'Files'
-                //Cogemos la URL generada en la etapa anterior
+                // Cogemos la URL generada en la etapa anterior
                 unstash 'baseUrlStash'
                 script {
                     def BASE_URL = readFile('BASE_URL.txt').trim()
@@ -101,7 +101,7 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
 
-                //Cojo los archivos del area de almacenamiento temporal generada con stash
+                // Cojo los archivos del área de almacenamiento temporal generada con stash
                 unstash 'Files'
                 sh '''
                     git checkout master
