@@ -1,0 +1,75 @@
+pipeline {
+    agent {label 'default'}
+    environment {
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN')
+    }
+    stages {
+        stage('Get Code') {
+            agent {label 'default'}
+            steps {
+                git branch: 'develop', url: 'https://github.com/rfbm97/to-do-list-aws.git'
+            }
+        }
+        stage('Static and Deploy') {
+            parallel {
+                stage('Static') {
+                    agent {label 'static'}
+                    steps {
+                        sh '''
+                            cd src
+                            python -m flake8 --format=pylint --exit-zero app>flake8.out
+                            python -m bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}"
+                        '''
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [[threshold: 8, type: 'TOTAL', unstable: true], [threshold: 10, type: 'TOTAL', unstable: false]]
+                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
+                        }
+                    }
+                }
+                stage('Deploy') {
+                    agent {label 'default'}
+                    steps {
+                        sh '''
+                            sam build
+                            sam deploy --config-env staging --config-file samconfig.toml --resolve-s3
+                        '''
+                        script {
+                            def BASE_URL = sh(script: "aws cloudformation describe-stacks --stack-name todo-list-aws-staging --query 'Stacks[0].Outputs[?OutputKey==`BaseUrlApi`].OutputValue' --region us-east-1 --output text", returnStdout: true).trim()
+                            echo "$BASE_URL"
+                            writeFile file: 'BASE_URL.txt', text: BASE_URL
+                            stash includes: 'BASE_URL.txt', name: 'baseUrlStash'
+                        }
+                    }
+                }
+            }
+        }
+        stage('Rest Test') {
+            agent {label 'api_rest'}
+            steps {
+                unstash 'baseUrlStash'
+                script {
+                    def BASE_URL = readFile('BASE_URL.txt').trim()
+                    echo "The BASE_URL is: ${BASE_URL}"
+                    env.BASE_URL = BASE_URL
+                    sh """
+                        export BASE_URL=$BASE_URL
+                        echo "BASE_URL is: \$BASE_URL"
+                        python -m pytest ${WORKSPACE}/test/integration/todoApiTest.py
+                    """
+                }
+            }
+        }
+        stage('Promote') {
+            agent {label 'default'}
+            steps {
+                sh '''
+                    git checkout master
+                    git merge develop
+                    git add .
+                    git commit -m "Merge con la rama develop"
+                    git push https://${GITHUB_TOKEN}@github.com/rfbm97/to-do-list-aws.git
+                '''
+            }
+        }
+    }
+}
