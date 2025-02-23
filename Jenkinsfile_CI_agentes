@@ -23,10 +23,10 @@ pipeline {
                 sh 'whoami'
 
                 git branch: 'develop', url: 'https://github.com/rfbm97/to-do-list-aws.git'
-                // Guardo los archivos en un área de almacenamiento temporal compartido entre los agentes con stash 
                 stash includes: '**/*', name: 'Files'
             }
         }
+        
         stage('Static and Deploy') {
             parallel {
                 stage('Static') {
@@ -35,7 +35,6 @@ pipeline {
                         echo 'Usuario en el que se ejecuta la sesion'
                         sh 'whoami'
 
-                        // Cojo los archivos del área de almacenamiento temporal generada con stash
                         unstash 'Files'
 
                         sh '''
@@ -55,7 +54,6 @@ pipeline {
                         echo 'Usuario en el que se ejecuta la sesion'
                         sh 'whoami'
 
-                        // Cojo los archivos del área de almacenamiento temporal generada con stash
                         unstash 'Files'
 
                         sh '''
@@ -78,9 +76,7 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
 
-                // Cojo los archivos del área de almacenamiento temporal generada con stash
                 unstash 'Files'
-                // Cogemos la URL generada en la etapa anterior
                 unstash 'baseUrlStash'
                 script {
                     def BASE_URL = readFile('BASE_URL.txt').trim()
@@ -94,6 +90,15 @@ pipeline {
                 }
             }
         }
+
+        stage('Clean Build Directory') {
+            agent {label 'default'}
+            steps {
+                echo 'Cleaning build directory...'
+                sh 'rm -rf .aws-sam/build'
+            }
+        }
+
         stage('Promote') {
             agent {label 'default'}
             steps {
@@ -101,7 +106,6 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
 
-                // Cojo los archivos del área de almacenamiento temporal generada con stash
                 unstash 'Files'
                 sh '''
                     git checkout master
