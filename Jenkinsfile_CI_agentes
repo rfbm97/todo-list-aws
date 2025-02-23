@@ -108,6 +108,12 @@ pipeline {
 
                 unstash 'Files'
                 sh '''
+stage('Promote') {
+    agent {label 'default'}
+    steps {
+            sh '''
+                    git add .
+                    git commit -m "Guardando cambios locales antes de cambiar a master"
                     git checkout master
                     git merge develop
                     git add .
