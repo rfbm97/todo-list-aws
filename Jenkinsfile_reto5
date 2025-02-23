@@ -7,9 +7,17 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
+
                 git branch: 'develop', url: 'https://github.com/rfbm97/todo-list-aws.git'
+                
+                //Creamos carpeta temporal para coger los archivos del segundo repositorio, ya que nos borra lo del otro repositorio al utilizar la orden directamente.
+                dir('Configuration'){
+                    git branch: 'staging', url: 'https://github.com/rfbm97/todo-list-aws-config.git'
+                }
+
             }
         }
+
         stage('Static') {
             steps {
                 // Ejecutamos flake8 para realizar las pruebas estáticas y bandit para relizar las pruebas de seguridad y exportamos los resultados a flake8.out y bandit.out respectivamente
@@ -29,9 +37,8 @@ pipeline {
             steps {
                 sh '''
                     sam build
-                    sam deploy --config-env staging --config-file samconfig.toml --resolve-s3
+                    sam deploy --config-env staging --config-file ${WORKSPACE}/Configuration/samconfig.toml --resolve-s3
                 '''
-               
             }
         }
         stage('Rest Test'){
@@ -54,9 +61,12 @@ pipeline {
         }
         stage('Promote'){
             steps{
-                //Borramos el Jenkinsfile que estamos ejecutando para no modificar el de la otra rama y subimos el resto al repositorio
+                //Borramos la carpeta creada anteriormente para no subirla al repositorio
+                sh '''
+                rm -r ${WORKSPACE}/Configuration
+                '''
                 sh'''
-                    rm Jenkinsfile_reto5
+                    
                     git checkout master
                     git merge develop
                     git add .
@@ -66,5 +76,6 @@ pipeline {
                 '''
             }
         }
+       
     }
 }
