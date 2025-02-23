@@ -3,11 +3,29 @@ pipeline {
     environment {
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
     }
+
+    stage('Clean Workspace'){
+            agent {label 'default'}
+            steps {
+                echo 'Usuario en el que se ejecuta la sesion'
+                sh 'whoami'
+
+                deleteDir()
+                echo "Workspace cleaned"
+            }
+        }
+
+
     stages {
         stage('Get Code') {
             agent {label 'default'}
             steps {
+                echo 'Usuario en el que se ejecuta la sesion'
+                sh 'whoami'
+
                 git branch: 'develop', url: 'https://github.com/rfbm97/to-do-list-aws.git'
+                // Guardo los archivos en un área de almacenamiento temporal compartido entre los agentes con stash 
+                stash includes: '**/*', name: 'Files'
             }
         }
         stage('Static and Deploy') {
@@ -15,6 +33,12 @@ pipeline {
                 stage('Static') {
                     agent {label 'static'}
                     steps {
+                        echo 'Usuario en el que se ejecuta la sesion'
+                        sh 'whoami'
+
+                        //Cojo los archivos del area de almacenamiento temporal generada con stash
+                        unstash 'Files'
+
                         sh '''
                             cd src
                             python -m flake8 --format=pylint --exit-zero app>flake8.out
@@ -29,6 +53,12 @@ pipeline {
                 stage('Deploy') {
                     agent {label 'default'}
                     steps {
+                        echo 'Usuario en el que se ejecuta la sesion'
+                        sh 'whoami'
+
+                        //Cojo los archivos del area de almacenamiento temporal generada con stash
+                        unstash 'Files'
+
                         sh '''
                             sam build
                             sam deploy --config-env staging --config-file samconfig.toml --resolve-s3
@@ -46,6 +76,12 @@ pipeline {
         stage('Rest Test') {
             agent {label 'api_rest'}
             steps {
+                echo 'Usuario en el que se ejecuta la sesion'
+                sh 'whoami'
+
+                //Cojo los archivos del area de almacenamiento temporal generada con stash
+                unstash 'Files'
+                //Cogemos la URL generada en la etapa anterior
                 unstash 'baseUrlStash'
                 script {
                     def BASE_URL = readFile('BASE_URL.txt').trim()
@@ -62,6 +98,12 @@ pipeline {
         stage('Promote') {
             agent {label 'default'}
             steps {
+
+                echo 'Usuario en el que se ejecuta la sesion'
+                sh 'whoami'
+
+                //Cojo los archivos del area de almacenamiento temporal generada con stash
+                unstash 'Files'
                 sh '''
                     git checkout master
                     git merge develop
