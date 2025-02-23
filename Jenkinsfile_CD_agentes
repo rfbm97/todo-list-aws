@@ -8,6 +8,7 @@ pipeline {
                 echo 'Usuario en el que se ejecuta la sesion'
                 sh 'whoami'
                 git branch: 'master', url: 'https://github.com/rfbm97/todo-list-aws.git'
+                stash includes: '**/*', name: 'Files'
 
             }
         }
