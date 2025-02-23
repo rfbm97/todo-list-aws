@@ -8,7 +8,7 @@ pipeline {
         stage('Get Code') {
             steps {
 
-                git branch: 'develop', url: 'https://github.com/rfbm97/todo-list-aws-test.git'
+                git branch: 'develop', url: 'https://github.com/rfbm97/todo-list-aws.git'
                 
                 //Creamos carpeta temporal para coger los archivos del segundo repositorio, ya que nos borra lo del otro repositorio al utilizar la orden directamente.
                 dir('Configuration'){
@@ -71,7 +71,7 @@ pipeline {
                     git merge develop
                     git add .
                     git commit -m "Merge con la rama develop"
-                    git push https://${GITHUB_TOKEN}@github.com/rfbm97/to-do-list-aws.git
+                    git push https://${GITHUB_TOKEN}@github.com/rfbm97/todo-list-aws.git
 
                 '''
             }
